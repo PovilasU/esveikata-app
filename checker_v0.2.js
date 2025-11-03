@@ -2,28 +2,14 @@ import fetch from "node-fetch";
 import nodemailer from "nodemailer";
 import "dotenv/config"; // loads .env file automatically
 
-const URLTest =
+const URL =
   "https://ipr.esveikata.lt/api/searches/appointments/times?municipalityId=6&organizationId=1000097423&specialistId=1000311919&page=0&size=50";
 
 // Paskausko laikai
-const URL =
+const URL1 =
   "https://ipr.esveikata.lt/api/searches/appointments/times?municipalityId=6&organizationId=1000097423&specialistId=1000107448&page=0&size=50";
 
 const esveikataBaseURL = "https://ipr.esveikata.lt";
-
-// Husky ASCII art (for email)
-const HUSKY_ART = String.raw`
-          /\     /\
-         (  o   o  )
-         (   =^=   )
-          \  ---  /
-           |  |  |
-           |  |  |
-           |_| |_|
-`;
-
-// ---------- helpers ----------
-
 function hasData(payload) {
   if (Array.isArray(payload)) return payload.length > 0;
   if (payload && typeof payload === "object") {
@@ -73,6 +59,7 @@ function buildHtmlTable(rows, title) {
 
   const body = rows
     .map((r) => {
+      // 👇 Replace these field names with the real ones from your JSON
       const institution =
         r.organizationName ||
         r.healthcareInstitutionName ||
@@ -82,16 +69,11 @@ function buildHtmlTable(rows, title) {
       const service =
         r.healthcareServiceName || r.serviceName || r.service || "";
       const payment =
-        (r.fundType && r.fundType.name) ||
-        r.paymentTypeName ||
-        r.payment ||
-        "Ligonių kasos";
+        r.fundType.name || r.paymentTypeName || r.payment || "Ligonių kasos"; // default guess
       const referral =
-        (r.referralNeed && r.referralNeed.name) ||
-        r.referralRequirement ||
-        r.referral ||
-        "";
+        r.referralNeed.name || r.referralRequirement || r.referral || ""; // e.g. "Su siuntimu" / "Be siuntimo"
 
+      // time – try a few possible fields
       const rawTime =
         r.earliestDateTime ||
         r.earliestTime ||
@@ -102,6 +84,7 @@ function buildHtmlTable(rows, title) {
         ? new Date(rawTime).toLocaleString("lt-LT")
         : "";
 
+      // number of free times in period
       const count =
         r.freeSlotsCount || r.timesInPeriod || r.count || r.countInPeriod;
       const freePeriod = count != null ? `${count} – įstaigoje.` : "";
@@ -137,8 +120,6 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
-// ---------- main ----------
-
 async function main() {
   try {
     console.log("Fetching data…");
@@ -157,22 +138,16 @@ async function main() {
 
       console.log("Data found — sending email…");
       await sendEmail({
-        subject: "Dr. Paskauskas - New Appointments Available on e.sveikata",
+        subject: " e.sveikata appointments available",
         text:
           "(dr.Paskauskas) yra laisvų appointmentų.\n\n" +
           URL +
-          "\n\n(Pažiūrėk HTML versiją, jei lentelės nematai.)\n\n" +
-          "Alpe sako labas:\n" +
-          HUSKY_ART,
+          "\n\n(Pažiūrėk HTML versiją, jei lentelės nematai.)",
         html: `
           <p>(dr.Paskauskas) yra laisvų appointmentų. URL:</p>
-          <p>Nuorodoje įvesti paieškos informaciją:</p>
+          <p>Nuorodoje ivesti paieškos informaciją:</p>
           <p><a href="${esveikataBaseURL}">${esveikataBaseURL}</a></p>
           ${htmlTable}
-          <p>Alpe sako labas:</p>
-          <pre style="font-family:monospace;white-space:pre;">${escapeHtml(
-            HUSKY_ART
-          )}</pre>
         `,
       });
       console.log("Email sent!");
@@ -197,7 +172,7 @@ async function sendEmail({ subject, text, html }) {
 
   await transporter.sendMail({
     from: process.env.MAIL_FROM,
-    to: process.env.MAIL_TO, // "a@x.com, b@y.com" for 2 emails
+    to: process.env.MAIL_TO, // can be "a@x.com, b@y.com" for 2 emails
     subject,
     text,
     html,
