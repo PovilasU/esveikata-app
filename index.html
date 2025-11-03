@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>e.sveikata Appointment Finder — Single or Compare</title>
+    <style>
+      :root {
+        --bg: #0b1324;
+        --panel: #111a33;
+        --ink: #e6e8ef;
+        --muted: #9aa3b2;
+        --accent: #6aa7ff;
+        --bad: #ff6b6b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu,
+          Helvetica, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      header {
+        padding: 20px 16px;
+        border-bottom: 1px solid #1d2a50;
+        background: linear-gradient(180deg, #0d1831, #0b1324);
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-size: 20px;
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      main {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 18px;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid #1d2a50;
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px 16px;
+        border-bottom: 1px dashed #1d2a50;
+      }
+      .pill {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        background: #0b142b;
+        border: 1px solid #2a3f7a;
+        color: #c2d1f3;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+      }
+      form {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(120px, 1fr));
+        gap: 12px;
+        padding: 16px;
+      }
+      label {
+        font-size: 12px;
+        color: var(--muted);
+        display: block;
+        margin-bottom: 6px;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #263560;
+        background: #0b142b;
+        color: var(--ink);
+      }
+      .row {
+        grid-column: span 1;
+      }
+      .row-2 {
+        grid-column: span 2;
+      }
+      .row-3 {
+        grid-column: span 3;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        align-items: end;
+      }
+      button {
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid #3256a3;
+        background: var(--accent);
+        color: #08132e;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: transparent;
+        color: var(--ink);
+        border-color: #2b3f75;
+      }
+      button.ghost {
+        background: transparent;
+        border-color: #2b3f75;
+        color: #bcd0ff;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .hint {
+        padding: 10px 16px;
+        color: var(--muted);
+        font-size: 12px;
+        border-top: 1px dashed #2a3f7a;
+      }
+      .results {
+        margin-top: 18px;
+      }
+      .status {
+        padding: 12px 16px;
+        border: 1px solid #2a3f7a;
+        border-radius: 12px;
+        background: #0b142b;
+      }
+      .status.bad {
+        border-color: #65323a;
+        background: #26151a;
+        color: #ffd7d7;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+      }
+      th,
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #1f2d56;
+        text-align: left;
+        vertical-align: top;
+        font-size: 14px;
+      }
+      th {
+        color: #b7c3da;
+        font-weight: 600;
+      }
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          monospace;
+      }
+      details summary {
+        cursor: pointer;
+        color: #b7c3da;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .grid.two {
+        grid-template-columns: 1fr 1fr;
+      }
+      .panelTitle {
+        font-weight: 700;
+        color: #cfe0ff;
+        margin: 10px 0 0;
+      }
+      @media (max-width: 1000px) {
+        form {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .row-2,
+        .row-3 {
+          grid-column: span 2;
+        }
+        .grid.two {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>e.sveikata Appointment Finder</h1>
+      <div class="sub">
+        Query one specialist or compare two side‑by‑side. Pure HTML + JS.
+      </div>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="toolbar">
+          <span class="pill">Presets</span>
+          <button type="button" class="ghost" id="presetA">
+            Use specialist 1000311919
+          </button>
+          <button type="button" class="ghost" id="presetB">
+            Use specialist 1000107448
+          </button>
+          <button type="button" class="ghost" id="swap">
+            Swap specialists
+          </button>
+          <button type="button" class="ghost" id="fetchA">Fetch A now</button>
+          <button type="button" class="ghost" id="fetchB">Fetch B now</button>
+        </div>
+        <form id="queryForm">
+          <div class="row">
+            <label for="municipalityId">municipalityId</label>
+            <input
+              id="municipalityId"
+              name="municipalityId"
+              type="number"
+              value="6"
+              required
+            />
+          </div>
+          <div class="row">
+            <label for="organizationId">organizationId</label>
+            <input
+              id="organizationId"
+              name="organizationId"
+              type="number"
+              value="1000097423"
+              required
+            />
+          </div>
+          <div class="row">
+            <label for="specialistId">specialistId</label>
+            <input
+              id="specialistId"
+              name="specialistId"
+              type="number"
+              value="1000311919"
+              required
+            />
+          </div>
+          <div class="row">
+            <label for="page">page</label>
+            <input id="page" name="page" type="number" value="0" min="0" />
+          </div>
+          <div class="row">
+            <label for="size">size</label>
+            <input
+              id="size"
+              name="size"
+              type="number"
+              value="50"
+              min="1"
+              max="200"
+            />
+          </div>
+          <div class="actions">
+            <button id="runBtn" type="submit">Fetch</button>
+            <button
+              id="copyBtn"
+              type="button"
+              class="secondary"
+              title="Copy the full request URL"
+            >
+              Copy URL
+            </button>
+            <button
+              id="compareBtn"
+              type="button"
+              class="secondary"
+              title="Fetch both presets and compare"
+            >
+              Compare presets
+            </button>
+          </div>
+        </form>
+        <div class="hint">
+          This endpoint may enforce CORS and/or require auth when called from a
+          browser. If you get a CORS error, run this file from a local web
+          server or use a proxy you control.
+        </div>
+      </section>
+
+      <section class="results" id="results">
+        <div class="status" id="status">
+          Ready. Click <b>Fetch</b> or <b>Compare presets</b>.
+        </div>
+        <div id="tableWrap" class="grid"></div>
+        <details style="margin-top: 12px">
+          <summary>Raw JSON (last single fetch)</summary>
+          <pre
+            class="mono"
+            id="rawJson"
+            style="
+              white-space: pre-wrap;
+              overflow: auto;
+              background: #0b142b;
+              border: 1px solid #1f2d56;
+              border-radius: 12px;
+              padding: 12px;
+            "
+          ></pre>
+        </details>
+      </section>
+    </main>
+
+    <script>
+          const API_BASE = 'https://ipr.esveikata.lt/api/searches/appointments/times';
+
+          // Two requested specialists as presets
+          const SPECIALISTS = {
+            A: '1000311919', // first one you asked
+            B: '1000107448', // second one you asked
+          };
+
+          const form = document.getElementById('queryForm');
+          const statusEl = document.getElementById('status');
+          const rawEl = document.getElementById('rawJson');
+          const tableWrap = document.getElementById('tableWrap');
+          const copyBtn = document.getElementById('copyBtn');
+          const runBtn = document.getElementById('runBtn');
+          const compareBtn = document.getElementById('compareBtn');
+          const fetchA = document.getElementById('fetchA');
+          const fetchB = document.getElementById('fetchB');
+
+          document.getElementById('presetA').onclick = () => setSpecialist(SPECIALISTS.A);
+          document.getElementById('presetB').onclick = () => setSpecialist(SPECIALISTS.B);
+          document.getElementById('swap').onclick = () => setSpecialist(
+            document.getElementById('specialistId').value === SPECIALISTS.A ? SPECIALISTS.B : SPECIALISTS.A
+          );
+
+          fetchA.onclick = async () => {
+            const base = Object.fromEntries(new FormData(form));
+            await fetchAndRender({ ...base, specialistId: SPECIALISTS.A });
+          };
+          fetchB.onclick = async () => {
+            const base = Object.fromEntries(new FormData(form));
+            await fetchAndRender({ ...base, specialistId: SPECIALISTS.B });
+          };
+
+          copyBtn.addEventListener('click', () => {
+            const url = buildUrl(Object.fromEntries(new FormData(form)));
+            navigator.clipboard.writeText(url).then(() => { flash(`Copied URL to clipboard`, false); });
+          });
+
+          form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const params = Object.fromEntries(new FormData(form));
+            await fetchAndRender(params);
+          });
+
+          compareBtn.addEventListener('click', async () => {
+            const baseParams = Object.fromEntries(new FormData(form));
+            await comparePresets(baseParams);
+          });
+
+          function setSpecialist(id){
+            document.getElementById('specialistId').value = id;
+          }
+
+          function buildUrl({ municipalityId, organizationId, specialistId, page, size }){
+            const u = new URL(API_BASE);
+            u.searchParams.set('municipalityId', municipalityId);
+            u.searchParams.set('organizationId', organizationId);
+            u.searchParams.set('specialistId', specialistId);
+            if (page !== undefined && page !== '') u.searchParams.set('page', page);
+            if (size !== undefined && size !== '') u.searchParams.set('size', size);
+            return u.toString();
+          }
+
+          async function fetchAndRender(params){
+            const url = buildUrl(params);
+            setLoading(true);
+            setStatus(`Fetching…
+      ${url}`);
+            rawEl.textContent = '';
+            tableWrap.innerHTML = '';
+            tableWrap.classList.remove('two');
+            try{
+              const { data, res } = await getJSON(url);
+              rawEl.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+              if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+              const panel = document.createElement('div');
+              panel.className = 'card';
+              const title = document.createElement('div');
+              title.className = 'panelTitle';
+              title.textContent = `Specialist ${params.specialistId}`;
+              panel.appendChild(title);
+              const holder = document.createElement('div');
+              holder.style.padding = '0 10px 10px';
+              holder.appendChild(renderData(data));
+              panel.appendChild(holder);
+              tableWrap.appendChild(panel);
+              setStatus('Success. Parsed response below.');
+            } catch (err){
+              handleError(err);
+            } finally {
+              setLoading(false);
+            }
+          }
+
+          async function comparePresets(base){
+            setLoading(true);
+            setStatus('Fetching both presets…');
+            rawEl.textContent = '';
+            tableWrap.innerHTML = '';
+            tableWrap.classList.add('two');
+            try{
+              const paramsA = { ...base, specialistId: SPECIALISTS.A };
+              const paramsB = { ...base, specialistId: SPECIALISTS.B };
+              const [a, b] = await Promise.all([
+                getJSON(buildUrl(paramsA)),
+                getJSON(buildUrl(paramsB)),
+              ]);
+              [
+                {label:`Specialist ${SPECIALISTS.A}`, payload:a},
+                {label:`Specialist ${SPECIALISTS.B}`, payload:b},
+              ].forEach(({label, payload}) => {
+                const panel = document.createElement('div');
+                panel.className = 'card';
+                const title = document.createElement('div');
+                title.className = 'panelTitle';
+                title.textContent = label;
+                panel.appendChild(title);
+                const holder = document.createElement('div');
+                holder.style.padding = '0 10px 10px';
+                holder.appendChild(renderData(payload.data));
+                panel.appendChild(holder);
+                tableWrap.appendChild(panel);
+              });
+              setStatus('Done. Showing both specialists side‑by‑side.');
+            } catch (err){
+              handleError(err);
+            } finally {
+              setLoading(false);
+            }
+          }
+
+          async function getJSON(url){
+            const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            const text = await res.text();
+            let data; try { data = JSON.parse(text); } catch { data = text; }
+            return { data, res };
+          }
+
+          function setLoading(isLoading){
+            runBtn.disabled = isLoading;
+            compareBtn.disabled = isLoading;
+            runBtn.textContent = isLoading ? 'Loading…' : 'Fetch';
+          }
+
+          function setStatus(text, bad=false){
+            statusEl.classList.toggle('bad', !!bad);
+            statusEl.textContent = text;
+          }
+
+          function handleError(err){
+            console.error(err);
+            const msg = (err && err.message) || 'Unknown error';
+            const corsHint = msg.includes('Failed to fetch') ? '
+      Likely CORS blocked the request. Serve this file from a local server or use a proxy.' : '';
+            setStatus(`Error: ${msg}${corsHint}`, true);
+          }
+
+          function renderData(data){
+            const wrap = document.createElement('div');
+            // If it's a paged response with a content/items array, use that. Otherwise if it's an array, render directly.
+            let rows = [];
+            if (Array.isArray(data)) {
+              rows = data;
+            } else if (data && typeof data === 'object') {
+              const possible = data.content || data.items || data.results || data.data || data.list;
+              rows = Array.isArray(possible) ? possible : [];
+            }
+
+            if (!rows.length){
+              // Fallback: show key/value table for object
+              if (data && typeof data === 'object'){
+                const kv = Object.entries(data);
+                wrap.appendChild(makeKVTable(kv));
+              } else {
+                const note = document.createElement('div');
+                note.className = 'status';
+                note.textContent = 'No tabular data to display.';
+                wrap.appendChild(note);
+              }
+              return wrap;
+            }
+
+            // Build column set from union of object keys
+            const cols = new Set();
+            rows.forEach(r => Object.keys(r || {}).forEach(k => cols.add(k)));
+            const headers = Array.from(cols);
+
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const trh = document.createElement('tr');
+            headers.forEach(h => {
+              const th = document.createElement('th');
+              th.textContent = h;
+              trh.appendChild(th);
+            });
+            thead.appendChild(trh);
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            rows.forEach(r => {
+              const tr = document.createElement('tr');
+              headers.forEach(h => {
+                const td = document.createElement('td');
+                td.appendChild(renderCell(r ? r[h] : undefined));
+                tr.appendChild(td);
+              });
+              tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            wrap.appendChild(table);
+            return wrap;
+          }
+
+          function renderCell(v){
+            const el = document.createElement('div');
+            if (v == null){ el.innerHTML = '<span class="mono" style="color:var(--muted)">null</span>'; return el; }
+            if (typeof v === 'object'){
+              const pre = document.createElement('pre');
+              pre.className = 'mono';
+              pre.textContent = JSON.stringify(v, null, 2);
+              el.appendChild(pre);
+              return el;
+            }
+            // try to format ISO date
+            if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v)){
+              try{ el.textContent = new Date(v).toLocaleString(); return el; } catch {}
+            }
+            el.textContent = String(v);
+            return el;
+          }
+
+          function makeKVTable(entries){
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const head = document.createElement('tr');
+            ['Key','Value'].forEach(h=>{ const th = document.createElement('th'); th.textContent=h; head.appendChild(th); });
+            thead.appendChild(head); table.appendChild(thead);
+            const tbody = document.createElement('tbody');
+            entries.forEach(([k,v])=>{
+              const tr = document.createElement('tr');
+              const tdk = document.createElement('td'); tdk.textContent = k; tr.appendChild(tdk);
+              const tdv = document.createElement('td'); tdv.appendChild(renderCell(v)); tr.appendChild(tdv);
+              tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            return table;
+          }
+
+          // Auto-run once on load with default params (specialist A)
+          fetchAndRender({
+            municipalityId: document.getElementById('municipalityId').value,
+            organizationId: document.getElementById('organizationId').value,
+            specialistId: document.getElementById('specialistId').value,
+            page: document.getElementById('page').value,
+            size: document.getElementById('size').value,
+          });
+    </script>
+  </body>
+</html>
