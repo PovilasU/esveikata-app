@@ -2,11 +2,11 @@ import fetch from "node-fetch";
 import nodemailer from "nodemailer";
 import "dotenv/config"; // loads .env file automatically
 
-const URL =
+const URL_test =
   "https://ipr.esveikata.lt/api/searches/appointments/times?municipalityId=6&organizationId=1000097423&specialistId=1000311919&page=0&size=50";
 
 // Paskausko laikai
-const URL1 =
+const URL =
   "https://ipr.esveikata.lt/api/searches/appointments/times?municipalityId=6&organizationId=1000097423&specialistId=1000107448&page=0&size=50";
 
 const esveikataBaseURL = "https://ipr.esveikata.lt";
